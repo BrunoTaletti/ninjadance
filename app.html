@@ -17,6 +17,10 @@
       --bg-color: rgb(0, 0, 0);
     }
 
+    * {
+      cursor: none !important;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -26,6 +30,18 @@
       font-family: var(--fonte-pixel);
       font-size: 12px;
       transition: background 0.2s ease;
+    }
+
+    .custom-cursor {
+      position: fixed;
+      width: 28px;
+      height: 28px;
+      pointer-events: none;
+      z-index: 9999;
+      background-image: url('./cursor.png');
+      background-size: cover;
+      display: none;
+      transform: translate(0.9vw, 0.9vw);
     }
 
     canvas {
@@ -216,6 +232,9 @@
 </head>
 <body class="crt">
   <canvas id="canvas"></canvas>
+
+  <div class="custom-cursor" id="customCursor"></div>
+  
   <button id="startBtn" onclick="startCapture()"><i class="fas fa-play"></i> COMEÇAR A FESTA</button>
   
   <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
@@ -264,6 +283,29 @@
     let mediaStream = null;
     let loadedFrames = [];
     let bgHue = 0;
+
+    // Cursor personalizado
+    const cursor = document.getElementById('customCursor');
+    let timer;
+    const delay = 1000; // 1 segundo de inatividade para ocultar o cursor
+
+    // Mostrar cursor personalizado quando o mouse se move
+    document.addEventListener('mousemove', (e) => {
+        cursor.style.display = 'block';
+        cursor.style.left = `${e.clientX - 16}px`;
+        cursor.style.top = `${e.clientY - 16}px`;
+        
+        // Resetar o timer de ocultação
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            cursor.style.display = 'none';
+        }, delay);
+    });
+
+    // Ocultar cursor quando sair da janela
+    document.addEventListener('mouseout', () => {
+        cursor.style.display = 'none';
+    });
 
     // Controle do menu
     function toggleMenu() {
