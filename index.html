@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NINJA DANCE - Sync Your Music with Dancing Ninja</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="shortcut icon" href="favicon.svg" type="image/x-icon">
+  <style>
+    :root {
+      --cor-primaria: #001aff;
+      --cor-secundaria: #010b44;
+      --fonte-pixel: 'Press Start 2P', cursive;
+      --bg-color: rgb(0, 0, 0);
+    }
+    
+    .pixel-font {
+      font-family: var(--fonte-pixel);
+    }
+    
+    .gradient-text {
+      background: linear-gradient(45deg, var(--cor-primaria), var(--cor-secundaria));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .glow {
+      text-shadow: 0 0 10px rgba(17, 0, 255, 0.7);
+    }
+    
+    .service-card {
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--cor-primaria);
+      box-shadow: 0 10px 20px rgba(4, 0, 255, 0.3);
+    }
+    
+    .playlist-item {
+      transition: all 0.2s ease;
+    }
+    
+    .playlist-item:hover {
+      background-color: rgba(17, 0, 255, 0.1);
+      transform: scale(1.02);
+    }
+    
+    .donate-btn {
+      animation: pulse 2s infinite;
+    }
+
+    code {
+      white-space: pre-wrap; /* Permite quebra de linha */
+      word-break: break-all; /* Quebra palavras longas */
+      overflow-wrap: break-word; /* Alternativa para word-break */
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    /* CRT effect */
+    .crt::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%),
+        linear-gradient(
+          90deg,
+          rgba(255, 0, 0, 0.06),
+          rgba(0, 255, 0, 0.02),
+          rgba(0, 0, 255, 0.06)
+        );
+      z-index: 100;
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-black text-white crt">
+  <!-- Language detection and content switching -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Detect user's language
+      const userLang = navigator.language || navigator.userLanguage;
+      const isPortuguese = userLang.includes('pt');
+      
+      // Update all elements with data-lang attribute
+      document.querySelectorAll('[data-lang-en]').forEach(el => {
+        if (isPortuguese && el.dataset.langPt) {
+          el.textContent = el.dataset.langPt;
+        } else {
+          el.textContent = el.dataset.langEn;
+        }
+      });
+      
+      // Update all placeholders
+      document.querySelectorAll('[data-ph-en]').forEach(el => {
+        if (isPortuguese && el.dataset.phPt) {
+          el.placeholder = el.dataset.phPt;
+        } else {
+          el.placeholder = el.dataset.phEn;
+        }
+      });
+    });
+  </script>
+
+  <!-- Navigation -->
+  <nav class="bg-black bg-opacity-80 border-b border-gray-800 fixed w-full z-50">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="./logo-lateral-negativo.png" alt="Ninja Dance Logo" class="h-12 mr-3">
+        <!--<span class="text-xl font-bold gradient-text pixel-font">NINJA DANCE</span>-->
+      </div>
+      <div class="hidden md:flex space-x-6">
+        <a href="#how-it-works" class="hover:text-blue-500 transition" data-lang-en="How It Works" data-lang-pt="Como Funciona"></a>
+        <a href="#playlists" class="hover:text-blue-500 transition" data-lang-en="Playlists" data-lang-pt="Playlists"></a>
+        <a href="#donate" class="hover:text-blue-500 transition" data-lang-en="Support Us" data-lang-pt="Apoie"></a>
+        <button onclick="window.location.href='app.html'" class="bg-gradient-to-r from-blue-500 to-slate-950 px-4 py-2 rounded-full hover:from-blue-600 hover:to-slate-950 transition">
+          <span data-lang-en="Start Dancing" data-lang-pt="Começar a Dançar"></span> <i class="fas fa-play ml-1"></i>
+        </button>
+      </div>
+      <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+    
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden md:hidden bg-black bg-opacity-90 absolute w-full px-4 py-2">
+      <a href="#how-it-works" class="block py-2 hover:text-blue-500 transition" data-lang-en="How It Works" data-lang-pt="Como Funciona"></a>
+      <a href="#playlists" class="block py-2 hover:text-blue-500 transition" data-lang-en="Playlists" data-lang-pt="Playlists"></a>
+      <a href="#donate" class="block py-2 hover:text-blue-500 transition" data-lang-en="Support Us" data-lang-pt="Apoie"></a>
+      <button onclick="window.location.href='app.html'" class="w-full bg-gradient-to-r from-blue-500 to-slate-950 px-4 py-2 rounded-full my-2 hover:from-blue-600 hover:to-slate-950 transition">
+        <span data-lang-en="Start Dancing" data-lang-pt="Começar a Dançar"></span> <i class="fas fa-play ml-1"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="pt-32 pb-20 px-4 text-center">
+    <div class="container mx-auto max-w-4xl">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6 gradient-text pixel-font glow">
+        <span data-lang-en="SYNC YOUR MUSIC WITH DANCING NINJA" data-lang-pt="SINCRONIZE SUA MÚSICA COM NINJA dançante"></span>
+      </h1>
+      <p class="text-xl md:text-2xl mb-10 text-gray-300 max-w-3xl mx-auto" data-lang-en="Open your favorite playlist and watch our pit ninja dance perfectly synchronized to your music with awesome visual effects!" data-lang-pt="Abra sua playlist favorita e assista nosso ninja dançar perfeitamente sincronizado com sua música com efeitos visuais incríveis!"></p>
+      
+      <div class="flex flex-col md:flex-row justify-center gap-4 mb-16">
+        <button onclick="window.location.href='app.html'" class="bg-gradient-to-r from-blue-500 to-slate-950 px-8 py-4 rounded-full text-lg font-bold hover:from-blue-600 hover:to-slate-950 transition transform hover:scale-105">
+          <span data-lang-en="Start Dancing Now" data-lang-pt="Começar a Dançar Agora"></span> <i class="fas fa-play ml-2"></i>
+        </button>
+        <button onclick="window.location.href='#playlists'" class="bg-gray-800 px-8 py-4 rounded-full text-lg font-bold hover:bg-gray-700 transition transform hover:scale-105">
+          <span data-lang-en="Browse Playlists" data-lang-pt="Explorar Playlists"></span> <i class="fas fa-music ml-2"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="py-20 px-4 bg-gray-900 bg-opacity-50">
+    <div class="container mx-auto max-w-6xl">
+      <h2 class="text-3xl md:text-4xl font-bold mb-16 text-center gradient-text pixel-font" data-lang-en="HOW IT WORKS" data-lang-pt="COMO FUNCIONA"></h2>
+      
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Step 1 -->
+        <div class="bg-gray-800 bg-opacity-70 p-6 rounded-xl border border-gray-700 hover:border-blue-500 transition">
+          <div class="text-blue-500 text-4xl mb-4">
+            <div class="bg-black w-16 h-16 rounded-full flex items-center justify-center border-2 border-blue-500">
+              <span class="pixel-font">1</span>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold mb-3" data-lang-en="Open Your Music" data-lang-pt="Abra Sua Música"></h3>
+          <p class="text-gray-300" data-lang-en="Open your favorite music streaming service (Spotify, YouTube Music, etc.) in a browser tab and play your playlist." data-lang-pt="Abra seu serviço de streaming favorito (Spotify, YouTube Music, etc.) em uma aba do navegador e toque sua playlist."></p>
+        </div>
+        
+        <!-- Step 2 -->
+        <div class="bg-gray-800 bg-opacity-70 p-6 rounded-xl border border-gray-700 hover:border-blue-500 transition">
+          <div class="text-blue-500 text-4xl mb-4">
+            <div class="bg-black w-16 h-16 rounded-full flex items-center justify-center border-2 border-blue-500">
+              <span class="pixel-font">2</span>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold mb-3" data-lang-en="Start Sharing" data-lang-pt="Comece a Compartilhar"></h3>
+          <p class="text-gray-300" data-lang-en="Click 'Start Dancing' and share your browser tab with audio when prompted by your browser." data-lang-pt="Clique em 'Começar a Dançar' e compartilhe a aba do navegador com áudio quando solicitado."></p>
+        </div>
+        
+        <!-- Step 3 -->
+        <div class="bg-gray-800 bg-opacity-70 p-6 rounded-xl border border-gray-700 hover:border-blue-500 transition">
+          <div class="text-blue-500 text-4xl mb-4">
+            <div class="bg-black w-16 h-16 rounded-full flex items-center justify-center border-2 border-blue-500">
+              <span class="pixel-font">3</span>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold mb-3" data-lang-en="Enjoy the Show" data-lang-pt="Aproveite o Show"></h3>
+          <p class="text-gray-300" data-lang-en="Watch the ninja dance perfectly synchronized to your music with customizable visual effects!" data-lang-pt="Assista oninja dançarem perfeitamente sincronizados com sua música com efeitos visuais personalizáveis!"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Supported Services -->
+  <section class="py-16 px-4">
+    <div class="container mx-auto max-w-6xl">
+      <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text pixel-font" data-lang-en="SUPPORTED SERVICES" data-lang-pt="SERVIÇOS COMPATÍVEIS"></h2>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <!-- Spotify -->
+        <div class="service-card bg-gray-900 p-6 rounded-lg text-center">
+          <div class="text-5xl text-green-500 mb-4">
+            <i class="fab fa-spotify"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2">Spotify</h3>
+          <p class="text-gray-400 text-sm" data-lang-en="Web Player" data-lang-pt="Player Web"></p>
+        </div>
+        
+        <!-- YouTube Music -->
+        <div class="service-card bg-gray-900 p-6 rounded-lg text-center">
+          <div class="text-5xl text-red-500 mb-4">
+            <i class="fab fa-youtube"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2" data-lang-en="YouTube Music" data-lang-pt="YouTube Music"></h3>
+          <p class="text-gray-400 text-sm" data-lang-en="Web Player" data-lang-pt="Player Web"></p>
+        </div>
+        
+        <!-- Apple Music -->
+        <div class="service-card bg-gray-900 p-6 rounded-lg text-center">
+          <div class="text-5xl text-pink-500 mb-4">
+            <i class="fab fa-apple"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2" data-lang-en="Apple Music" data-lang-pt="Apple Music"></h3>
+          <p class="text-gray-400 text-sm" data-lang-en="Web Player" data-lang-pt="Player Web"></p>
+        </div>
+        
+        <!-- Deezer -->
+        <div class="service-card bg-gray-900 p-6 rounded-lg text-center">
+          <div class="text-5xl text-blue-400 mb-4">
+            <i class="fab fa-deezer"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-2">Deezer</h3>
+          <p class="text-gray-400 text-sm" data-lang-en="Web Player" data-lang-pt="Player Web"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Playlists -->
+  <section id="playlists" class="py-20 px-4 bg-gray-900 bg-opacity-50">
+    <div class="container mx-auto max-w-6xl">
+      <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center gradient-text pixel-font" data-lang-en="FEATURED PLAYLISTS" data-lang-pt="PLAYLIST DESTAQUES"></h2>
+      
+      <div class="mb-8 flex justify-center">
+        <div class="inline-flex rounded-md shadow-sm" role="group">
+          <button type="button" onclick="filterPlaylists('all')" class="px-4 py-2 text-sm font-medium rounded-l-lg bg-blue-600 text-white">
+            <span data-lang-en="All" data-lang-pt="Todas"></span>
+          </button>
+          <button type="button" onclick="filterPlaylists('spotify')" class="px-4 py-2 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600">
+            <i class="fab fa-spotify mr-1"></i> Spotify
+          </button>
+          <button type="button" onclick="filterPlaylists('youtube')" class="px-4 py-2 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600">
+            <i class="fab fa-youtube mr-1"></i> <span data-lang-en="YouTube" data-lang-pt="YouTube"></span>
+          </button>
+          <button type="button" onclick="filterPlaylists('apple')" class="px-4 py-2 text-sm font-medium rounded-r-lg bg-gray-700 text-gray-300 hover:bg-gray-600">
+            <i class="fab fa-apple mr-1"></i> <span data-lang-en="Apple" data-lang-pt="Apple"></span>
+          </button>
+        </div>
+      </div>
+      
+      <div id="playlistsContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Playlist items will be added here by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Donation Section -->
+  <section id="donate" class="py-20 px-4">
+    <div class="container mx-auto max-w-4xl text-center">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6 gradient-text pixel-font" data-lang-en="SUPPORT THE PROJECT" data-lang-pt="APOIE O PROJETO"></h2>
+      <p class="text-xl text-gray-300 mb-10 max-w-3xl mx-auto" data-lang-en="Help keep the ninja dancing! Your support helps us improve and add new features." data-lang-pt="Ajude oninja a continuarem dançando! Seu apoio nos ajuda a melhorar e adicionar novos recursos."></p>
+      
+      <div class="grid md:grid-cols-2 gap-8 mb-12">
+        <!-- Stripe Donation -->
+        <div class="bg-gray-900 bg-opacity-70 p-8 rounded-xl border border-gray-700">
+          <div class="text-5xl text-blue-500 mb-4">
+            <i class="fab fa-stripe"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4" data-lang-en="International Donations" data-lang-pt="Doações Internacionais"></h3>
+          <p class="text-gray-400 mb-6" data-lang-en="Support us with a credit card donation via Stripe" data-lang-pt="Apoie-nos com uma doação via cartão de crédito pelo Stripe"></p>
+          <button onclick="showStripeDonation()" class="donate-btn bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 rounded-full font-bold hover:from-blue-600 hover:to-blue-700 transition">
+            <i class="fas fa-heart mr-2"></i> <span data-lang-en="Donate Now" data-lang-pt="Doar Agora"></span>
+          </button>
+        </div>
+        
+        <!-- Pix Donation (for Brazil) -->
+        <div class="bg-gray-900 bg-opacity-70 p-8 rounded-xl border border-gray-700">
+          <div class="text-5xl text-green-500 mb-4">
+            <i class="fas fa-qrcode"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4">PIX (Brazil)</h3>
+          <p class="text-gray-400 mb-6" data-lang-en="For Brazilian supporters via instant PIX transfer" data-lang-pt="Para apoiadores brasileiros via transferência instantânea PIX"></p>
+          <button onclick="showPixDonation()" class="donate-btn bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 rounded-full font-bold hover:from-green-600 hover:to-green-700 transition">
+            <i class="fas fa-heart mr-2"></i> <span data-lang-en="Donate with PIX" data-lang-pt="Doar com PIX"></span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="text-gray-500 text-sm" data-lang-en="All donations go directly to project development and server costs." data-lang-pt="Todas as doações vão diretamente para o desenvolvimento do projeto e custos de servidor."></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-black bg-opacity-90 py-12 px-4 border-t border-gray-800">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="./logo-lateral-negativo.png" alt="Ninja Dance Logo" class="h-12 mr-2">
+            <!--<span class="text-lg font-bold gradient-text">NINJA DANCE</span>-->
+          </div>
+          <p class="text-gray-400 text-sm" data-lang-en="Sync your music with dancing ninja and awesome visual effects!" data-lang-pt="Sincronize sua música com ninja dançante e efeitos visuais incríveis!"></p>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-bold mb-4" data-lang-en="Quick Links" data-lang-pt="Links Rápidos"></h4>
+          <ul class="space-y-2">
+            <li><a href="#how-it-works" class="text-gray-400 hover:text-blue-500 transition text-sm" data-lang-en="How It Works" data-lang-pt="Como Funciona"></a></li>
+            <li><a href="#playlists" class="text-gray-400 hover:text-blue-500 transition text-sm" data-lang-en="Playlists" data-lang-pt="Playlists"></a></li>
+            <li><a href="#donate" class="text-gray-400 hover:text-blue-500 transition text-sm" data-lang-en="Support Us" data-lang-pt="Apoie-nos"></a></li>
+            <li><a href="app.html" class="text-gray-400 hover:text-blue-500 transition text-sm" data-lang-en="Start Dancing" data-lang-pt="Começar a Dançar"></a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-bold mb-4" data-lang-en="Connect" data-lang-pt="Conecte-se"></h4>
+          <div class="flex space-x-4">
+            <a href="#" class="text-gray-400 hover:text-blue-500 transition text-2xl"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-gray-400 hover:text-blue-500 transition text-2xl"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="text-gray-400 hover:text-blue-500 transition text-2xl"><i class="fab fa-github"></i></a>
+            <a href="#" class="text-gray-400 hover:text-blue-500 transition text-2xl"><i class="fab fa-discord"></i></a>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="text-lg font-bold mb-4" data-lang-en="Newsletter" data-lang-pt="Newsletter"></h4>
+          <p class="text-gray-400 text-sm mb-2" data-lang-en="Stay updated with new features and playlists!" data-lang-pt="Mantenha-se atualizado com novos recursos e playlists!"></p>
+          <div class="flex">
+            <input type="email" placeholder="Your email" class="bg-gray-800 text-white px-3 py-2 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm" data-ph-en="Your email" data-ph-pt="Seu email">
+            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-r text-sm font-bold transition">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
+        <p data-lang-en="© 2023 Ninja Dance. All ninja dance happily." data-lang-pt="© 2023 Ninja Dance. Todos oninja dançam felizes."></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Donation Modals -->
+  <!-- Stripe Donation Modal -->
+  <div id="stripeModal" class="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center hidden">
+    <div class="bg-gray-900 rounded-xl p-8 max-w-md w-full mx-4 border border-blue-500 relative">
+      <button onclick="closeModal('stripeModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 class="text-2xl font-bold mb-6 text-center gradient-text" data-lang-en="Support with Stripe" data-lang-pt="Apoiar com Stripe"></h3>
+      
+      <div class="mb-6">
+        <label class="block text-gray-300 mb-2" data-lang-en="Donation Amount" data-lang-pt="Valor da Doação"></label>
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <button class="bg-gray-800 hover:bg-blue-500 py-2 rounded transition">$5</button>
+          <button class="bg-gray-800 hover:bg-blue-500 py-2 rounded transition">$10</button>
+          <button class="bg-gray-800 hover:bg-blue-500 py-2 rounded transition">$20</button>
+          <button class="bg-gray-800 hover:bg-blue-500 py-2 rounded transition">$50</button>
+          <button class="bg-gray-800 hover:bg-blue-500 py-2 rounded transition">$100</button>
+          <button class="bg-gray-800 hover:bg-blue-500 py-2 rounded transition" data-lang-en="Custom" data-lang-pt="Personalizar"></button>
+        </div>
+        <input type="number" placeholder="Custom amount" class="bg-gray-800 text-white px-3 py-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500" data-ph-en="Custom amount" data-ph-pt="Valor personalizado">
+      </div>
+      
+      <div class="mb-6">
+        <label class="block text-gray-300 mb-2" data-lang-en="Payment Details" data-lang-pt="Detalhes do Pagamento"></label>
+        <!-- Stripe elements would go here in a real implementation -->
+        <div class="bg-gray-800 rounded p-4 mb-3">
+          <div class="h-8 bg-gray-700 rounded mb-2"></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="h-8 bg-gray-700 rounded"></div>
+            <div class="h-8 bg-gray-700 rounded"></div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-full font-bold transition">
+        <i class="fas fa-heart mr-2"></i> <span data-lang-en="Donate Now" data-lang-pt="Doar Agora"></span>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Pix Donation Modal -->
+  <div id="pixModal" class="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center hidden">
+    <div class="bg-gray-900 rounded-xl p-8 max-w-md w-full mx-4 border border-green-500 relative">
+      <button onclick="closeModal('pixModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+      <h3 class="text-2xl font-bold mb-6 text-center gradient-text">PIX DONATION</h3>
+      
+      <div class="flex justify-center mb-6">
+        <img src="./pixQR.png" alt="PIX QR Code" class="border-2 border-green-500 rounded">
+      </div>
+      
+      <div class="mb-6">
+        <label class="block text-gray-300 mb-2">Chave PIX</label>
+        <div class="bg-gray-800 rounded p-3 flex items-center justify-between">
+          <code class="text-green-400">00020126360014BR.GOV.BCB.PIX0114436215540001195204000053039865802BR5911NINJA DANCE6007Itapema62130509NINJAANCE6304B028</code>
+          <button onclick="copyPixKey()" class="text-gray-400 hover:text-white">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="text-gray-400 text-sm text-center" data-lang-en="Scan the QR code or copy the PIX key to make your donation. Thank you for your support!" data-lang-pt="Escaneie o QR code ou copie a chave PIX para fazer sua doação. Obrigado pelo apoio!"></div>
+    </div>
+  </div>
+
+  <script>
+    // Mobile menu toggle
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('hidden');
+    }
+    
+    // Playlist filtering
+    function filterPlaylists(service) {
+      const items = document.querySelectorAll('.playlist-item');
+      items.forEach(item => {
+        if (service === 'all' || item.dataset.service === service) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+    }
+    
+    // Modal functions
+    function showStripeDonation() {
+      document.getElementById('stripeModal').classList.remove('hidden');
+    }
+    
+    function showPixDonation() {
+      document.getElementById('pixModal').classList.remove('hidden');
+    }
+    
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+    
+    function copyPixKey() {
+      navigator.clipboard.writeText('00020126360014BR.GOV.BCB.PIX0114436215540001195204000053039865802BR5911NINJA DANCE6007Itapema62130509NINJAANCE6304B028');
+      alert('PIX key copied to clipboard!');
+    }
+    
+    // Sample playlists data
+    const playlists = [
+      {
+        id: 1,
+        title: "Electronic Dance Vibes",
+        service: "spotify",
+        description: "The best electronic tracks to make your ninja dance all night",
+        image: "https://via.placeholder.com/300x300",
+        link: "https://open.spotify.com/playlist/37i9dQZF1DX4dyzvuaRJ0n"
+      },
+      {
+        id: 2,
+        title: "Retro Game Beats",
+        service: "youtube",
+        description: "Classic video game music remixed for modern dancing",
+        image: "https://via.placeholder.com/300x300",
+        link: "https://music.youtube.com/playlist?list=PL4fGSI1pDJn6jXS_Tv_N9B8Z0HTTcEQOp"
+      },
+      {
+        id: 3,
+        title: "Chill Synthwave",
+        service: "spotify",
+        description: "Smooth synthwave for relaxed ninja dancing",
+        image: "https://via.placeholder.com/300x300",
+        link: "https://open.spotify.com/playlist/37i9dQZF1DX7qK8ma5wgG1"
+      },
+      {
+        id: 4,
+        title: "Pop Dance Party",
+        service: "apple",
+        description: "Top pop hits that will get your ninja moving",
+        image: "https://via.placeholder.com/300x300",
+        link: "https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb"
+      },
+      {
+        id: 5,
+        title: "80s Dance Classics",
+        service: "youtube",
+        description: "Iconic 80s tracks for nostalgic ninja dancing",
+        image: "https://via.placeholder.com/300x300",
+        link: "https://music.youtube.com/playlist?list=PL4fGSI1pDJn5sJ-dD6t_-B4AgQN1klbgZ"
+      },
+      {
+        id: 6,
+        title: "Ninja Workout Mix",
+        service: "spotify",
+        description: "High energy tracks to make your ninja break a sweat",
+        image: "https://via.placeholder.com/300x300",
+        link: "https://open.spotify.com/playlist/37i9dQZF1DX76Wlfdnj7AP"
+      }
+    ];
+    
+    // Render playlists
+    function renderPlaylists() {
+      const container = document.getElementById('playlistsContainer');
+      
+      playlists.forEach(playlist => {
+        const serviceIcon = playlist.service === 'spotify' ? 'fa-spotify text-green-500' : 
+                          playlist.service === 'youtube' ? 'fa-youtube text-red-500' : 
+                          'fa-apple text-pink-500';
+        
+        const item = document.createElement('div');
+        item.className = `playlist-item bg-gray-800 bg-opacity-70 p-4 rounded-lg border border-gray-700 hover:border-blue-500 transition cursor-pointer`;
+        item.dataset.service = playlist.service;
+        
+        item.innerHTML = `
+          <div class="flex mb-4">
+            <img src="${playlist.image}" alt="${playlist.title}" class="w-16 h-16 rounded object-cover">
+            <div class="ml-4 flex-1">
+              <h3 class="font-bold line-clamp-1">${playlist.title}</h3>
+              <div class="flex items-center text-gray-400 text-sm mt-1">
+                <i class="fab ${serviceIcon} mr-2"></i>
+                <span>${playlist.service.charAt(0).toUpperCase() + playlist.service.slice(1)}</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-gray-300 text-sm mb-4 line-clamp-2">${playlist.description}</p>
+          <a href="${playlist.link}" target="_blank" class="block text-center bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-full text-sm font-bold transition">
+            <span data-lang-en="Open Playlist" data-lang-pt="Abrir Playlist"></span> <i class="fas fa-external-link-alt ml-1"></i>
+          </a>
+        `;
+        
+        container.appendChild(item);
+      });
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      renderPlaylists();
+      
+      // Smooth scrolling for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          const targetId = this.getAttribute('href');
+          if (targetId === '#') return;
+          
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({
+              behavior: 'smooth'
+            });
+            
+            // Close mobile menu if open
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (!mobileMenu.classList.contains('hidden')) {
+              mobileMenu.classList.add('hidden');
+            }
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

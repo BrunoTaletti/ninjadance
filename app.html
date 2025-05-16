@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="favicon.svg" type="image/x-icon">
+  <title>NINJA DANCE</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Fonte Pixel -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cor-primaria: #001aff;
+      --cor-secundaria: #010b44;
+      --fonte-pixel: 'Press Start 2P', cursive;
+      --bg-color: rgb(0, 0, 0);
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-color);
+      overflow: hidden;
+      height: 100%;
+      font-family: var(--fonte-pixel);
+      font-size: 12px;
+      transition: background 0.2s ease;
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-family: var(--fonte-pixel);
+      font-size: 10px;
+      background: transparent;
+      border: 2px solid white;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.05);
+    }
+
+    #startBtn {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      font-size: 14px;
+      padding: 15px 25px;
+      background: linear-gradient(45deg, var(--cor-primaria), var(--cor-secundaria));
+      border: none;
+    }
+
+    #sideMenu {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 15px;
+      border-radius: 12px;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      max-width: 250px;
+      backdrop-filter: blur(5px);
+      transform: translateX(-110%);
+      transition: transform 0.3s ease;
+      z-index: 300;
+    }
+
+    #sideMenu.active {
+      transform: translateX(0);
+    }
+
+    .menu-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 300;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid white;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: none;
+      font-size: 16px;
+    }
+
+    .close-menu {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .effects-section {
+      margin-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 10px;
+    }
+
+    .effects-section label {
+      display: block;
+      margin: 8px 0;
+      cursor: pointer;
+      font-size: 10px;
+    }
+
+    .logo {
+      width: 100%;
+    }
+
+    .t-center {
+      text-align: center;
+    }
+
+    #donatePopup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      padding: 25px;
+      border-radius: 15px;
+      color: white;
+      text-align: center;
+      border: 2px solid var(--cor-primaria);
+      display: none;
+      z-index: 200;
+      max-width: 90%;
+      font-family: var(--fonte-pixel);
+    }
+
+    #waveform {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    }
+
+    input[type="checkbox"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border: 2px solid white;
+      border-radius: 3px;
+      outline: none;
+      transition: all 0.3s;
+      position: relative;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    input[type="checkbox"]:checked {
+      background-color: var(--cor-primaria);
+      border-color: var(--cor-primaria);
+    }
+
+    input[type="checkbox"]:checked::after {
+      content: "\f00c";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      font-size: 10px;
+      color: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    /* Efeito de scanline CRT */
+    .crt::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%),
+        linear-gradient(
+          90deg,
+          rgba(255, 0, 0, 0.06),
+          rgba(0, 255, 0, 0.02),
+          rgba(0, 0, 255, 0.06)
+        );
+      z-index: 100;
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="crt">
+  <canvas id="canvas"></canvas>
+  <button id="startBtn" onclick="startCapture()"><i class="fas fa-play"></i> COMEÇAR A FESTA</button>
+  
+  <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+  
+  <div id="sideMenu">
+    <button class="close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
+    <div id="musicData">
+      <img src="./logo-lateral-negativo.png" class="logo" alt="logo-lateral-negativo">
+    </div>
+    <div class="effects-section">
+      <button onclick="reconnectCapture()" style="width: 100%; margin-bottom: 10px;">
+        <i class="fas fa-sync-alt"></i> RECOMPARTILHAR
+      </button>
+      <label><input type="checkbox" id="showWaveform"> <i class="fas fa-wave-square"></i> Visualizador de Áudio</label>
+      <label><input type="checkbox" id="rgbStars" checked> <i class="fas fa-star"></i> Estrelas Arco-Íris</label>
+      <label><input type="checkbox" id="colorPulse" checked> <i class="fas fa-heartbeat"></i> Pulsação de Cores</label>
+      <label><input type="checkbox" id="rgbPulse"> <i class="fas fa-lightbulb"></i> Pulsar Fundo RGB</label>
+      <label><input type="checkbox" id="beatBlink" checked> <i class="fas fa-bolt"></i> Piscar no Beat</label>
+    </div>
+    <div class="effects-section t-center">Feito com <i class="fas fa-heart" style="color: var(--cor-primaria);"></i> por Bruno Taletti.</div>
+  </div>
+
+  <div id="donatePopup">
+    <div id="popupContent"></div>
+    <button onclick="closePopup()" style="margin-top:15px"><i class="fas fa-times"></i> FECHAR</button>
+  </div>
+
+  <script>
+    // Configurações principais
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const FPS = 10;
+
+    // Configuração de frames
+    const totalFrames = 173;
+    const framePrefix = 'ezgif-frame-';
+    const FRAMES = Array.from({length: totalFrames}, (_, i) => 
+      `frames/${framePrefix}${String(i+1).padStart(3, '0')}.jpg`);
+
+    // Variáveis de estado
+    let currentFrame = 0;
+    let audioContext, analyser, dataArray;
+    let stars = [];
+    let bassIntensity = 0;
+    let starBaseSpeed = 0.5;
+    let mediaStream = null;
+    let loadedFrames = [];
+    let bgHue = 0;
+
+    // Controle do menu
+    function toggleMenu() {
+      const menu = document.getElementById('sideMenu');
+      menu.classList.toggle('active');
+      document.querySelector('.menu-toggle').style.display = menu.classList.contains('active') ? 'none' : 'block';
+    }
+
+    function updateUI() {
+      const menuToggle = document.querySelector('.menu-toggle');
+      menuToggle.style.display = mediaStream ? 'block' : 'none';
+    }
+
+    // Pré-carregamento de imagens
+    async function preloadFrames() {
+      return Promise.all(FRAMES.map(src => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => {
+            loadedFrames.push(img);
+            resolve();
+          };
+        });
+      }));
+    }
+
+    // Sistema de animação
+    function initAnimation() {
+      const updateCanvasSize = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        stars = Array.from({length: 100}, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 3,
+          speed: Math.random() * 0.5 + starBaseSpeed,
+          hue: Math.random() * 360
+        }));
+      };
+
+      updateCanvasSize();
+      window.addEventListener('resize', updateCanvasSize);
+
+      setInterval(() => {
+        // Efeito de fundo RGB
+        if(document.getElementById('rgbPulse').checked) {
+          bgHue = (bgHue + 1) % 360;
+          const pulseValue = Math.min(bassIntensity * 50, 30);
+          document.body.style.background = `hsla(${bgHue}, 80%, ${10 + pulseValue}%, 0.8)`;
+        } else {
+          document.body.style.background = 'rgba(0, 0, 0, 0.8)';
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawStars();
+        drawNinja();
+        if(document.getElementById('showWaveform').checked) drawWaveform();
+      }, 1000/FPS);
+    }
+
+    // Desenho do Ninja
+    function drawNinja() {
+      const img = loadedFrames[currentFrame % totalFrames];
+      if(!img) return;
+
+      const maxWidth = canvas.width * 0.9;
+      const maxHeight = canvas.height * 0.9;
+      const scaleFactor = Math.min(
+        maxWidth / img.width,
+        maxHeight / img.height
+      ) * (0.8 + bassIntensity * 0.3);
+
+      const rotation = bassIntensity * (Math.PI/24) * Math.sin(Date.now()/200);
+      const width = img.width * scaleFactor;
+      const height = img.height * scaleFactor;
+      
+      ctx.save();
+      ctx.translate(canvas.width/2, canvas.height/2);
+      ctx.rotate(rotation);
+      
+      // Efeito de piscar
+      if(document.getElementById('beatBlink').checked) {
+        ctx.globalAlpha = 0.5 + (bassIntensity * 0.5);
+      }
+      
+      ctx.drawImage(img, -width/2, -height/2, width, height);
+      ctx.restore();
+
+      currentFrame = (currentFrame + 1) % totalFrames;
+    }
+
+    // Sistema de estrelas
+    function drawStars() {
+      const intensityMultiplier = 0.5 + (bassIntensity * 3);
+      
+      stars.forEach(star => {
+        star.x -= star.speed * intensityMultiplier * (1 + Math.sin(Date.now()/500)*0.3);
+        
+        if(star.x < -star.size * 2) {
+          star.x = canvas.width + star.size;
+          star.y = Math.random() * canvas.height;
+          star.size = Math.random() * 3;
+        }
+
+        const useRGB = document.getElementById('rgbStars').checked;
+        const pulseEffect = document.getElementById('colorPulse').checked;
+        
+        let hue = star.hue;
+        if(useRGB) {
+          hue = (star.hue += 0.7) % 360;
+          if(pulseEffect) {
+            hue = (hue + bassIntensity * 50) % 360;
+          }
+        }
+        
+        ctx.fillStyle = useRGB ? 
+          `hsl(${hue}, 100%, ${70 + (bassIntensity * 20)}%)` : 
+          `rgba(255, 255, 255, ${0.8 + bassIntensity * 0.5})`;
+        
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size * (1 + bassIntensity * 0.5), 0, Math.PI*2);
+        ctx.fill();
+      });
+    }
+
+    // Visualizador de áudio
+    function drawWaveform() {
+      if(!dataArray) return;
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + bassIntensity*0.7})`;
+      for(let i = 0; i < dataArray.length; i += 4) {
+        const height = dataArray[i] / 255 * canvas.height/4;
+        ctx.fillRect(i * 4, canvas.height - height, 3, height);
+      }
+    }
+
+    // Controle de captura de tela
+    async function startCapture() {
+      try {
+        mediaStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true
+        });
+        
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('sideMenu').classList.add('active');
+        updateUI();
+        
+        setupAudioAnalysis(mediaStream);
+        await preloadFrames();
+        initAnimation();
+        //initDonationTimer();
+      } catch(err) {
+        alert('Erro ao iniciar: ' + err.message);
+      }
+    }
+
+    async function reconnectCapture() {
+      if(mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+      await startCapture();
+    }
+
+    // Configuração de áudio
+    function setupAudioAnalysis(stream) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      analyzeAudio();
+    }
+
+    function analyzeAudio() {
+      analyser.getByteFrequencyData(dataArray);
+      
+      const bass = dataArray.slice(0, 20).reduce((a, b) => a + b) / 20;
+      const lowMid = dataArray.slice(20, 40).reduce((a, b) => a + b) / 20;
+      bassIntensity = Math.min((bass * 1.5 + lowMid * 0.5) / 255, 1.5);
+      
+      requestAnimationFrame(analyzeAudio);
+    }
+
+    // Popup de doação
+    async function showDonationPopup() {
+      try {
+        const response = await fetch('https://ip-api.com/json/?fields=countryCode');
+        const data = await response.json();
+        
+        const isBrazil = data.countryCode === 'BR';
+        document.getElementById('popupContent').innerHTML = isBrazil ? 
+          `<img src="pixQR.png" width="150">
+           <p>Chave Pix: 43621554000119</p>` :
+          `<p>Help keep me dancing!<br>International donations:</p>`;
+      } catch {
+        document.getElementById('popupContent').innerHTML = 
+          `<p>Ajude o ninja a continuar dançando!</p>`;
+      }
+      document.getElementById('donatePopup').style.display = 'block';
+    }
+
+    // Funções auxiliares
+    function closePopup() {
+      document.getElementById('donatePopup').style.display = 'none';
+    }
+
+    function initDonationTimer() {
+      setTimeout(showDonationPopup, 2000);
+    }
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
+</body>
+</html>
