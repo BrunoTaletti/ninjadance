@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <link rel="shortcut icon" href="favicon.svg" type="image/x-icon">
   <title>NINJA DANCE</title>
   <!-- Font Awesome -->
@@ -51,6 +51,8 @@
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
     }
 
     button {
@@ -61,7 +63,6 @@
       border: 2px solid white;
       border-radius: 5px;
       color: white;
-      cursor: pointer;
       transition: all 0.3s;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -128,7 +129,6 @@
       color: white;
       padding: 8px 12px;
       border-radius: 8px;
-      cursor: pointer;
       display: none;
       font-size: 16px;
     }
@@ -141,7 +141,6 @@
       border: none;
       font-size: 16px;
       color: white;
-      cursor: pointer;
     }
 
     .effects-section {
@@ -153,7 +152,6 @@
     .effects-section label {
       display: block;
       margin: 8px 0;
-      cursor: pointer;
       font-size: 10px;
     }
 
@@ -308,15 +306,15 @@
   <button id="startBtn"><i class="fas fa-play"></i> COMEÇAR A FESTA</button>
   <button id="mobileMicBtn"><i class="fas fa-microphone"></i> USAR MICROFONE</button>
   
-  <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+  <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
   
   <div id="sideMenu">
-    <button class="close-menu" onclick="toggleMenu()"><i class="fas fa-times"></i></button>
+    <button class="close-menu" id="closeMenu"><i class="fas fa-times"></i></button>
     <div id="musicData">
       <img src="./logo-lateral-negativo.png" class="logo" alt="logo-lateral-negativo">
     </div>
     <div class="effects-section">
-      <button onclick="reconnectCapture()" style="width: 100%; margin-bottom: 10px;" id="reconnectCapture">
+      <button id="reconnectBtn" style="width: 100%; margin-bottom: 10px;">
         <i class="fas fa-sync-alt"></i> RECOMPARTILHAR
       </button>
       <label><input type="checkbox" id="showWaveform"> <i class="fas fa-wave-square"></i> Visualizador de Áudio</label>
@@ -330,7 +328,7 @@
 
   <div id="donatePopup">
     <div id="popupContent"></div>
-    <button onclick="closePopup()" style="margin-top:15px"><i class="fas fa-times"></i> FECHAR</button>
+    <button id="closePopupBtn" style="margin-top:15px"><i class="fas fa-times"></i> FECHAR</button>
   </div>
 
   <div id="shareWarning">
@@ -342,366 +340,518 @@
   </div>
 
   <script>
-    // Configurações principais
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const FPS = 10;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    /**
+     * Ninja Dance App - Main Controller
+     * Refactored with Clean Code principles and best practices
+     */
 
-    // Configuração de frames
-    const totalFrames = 173;
-    const framePrefix = 'ezgif-frame-';
-    const FRAMES = Array.from({length: totalFrames}, (_, i) => 
-      `frames/${framePrefix}${String(i+1).padStart(3, '0')}.jpg`);
+    // ================ CONSTANTS AND CONFIG ================
+    const CONFIG = {
+      FPS: 10,
+      TOTAL_FRAMES: 173,
+      FRAME_PREFIX: 'ezgif-frame-',
+      FRAME_PATH: 'frames/',
+      STAR_COUNT: 100,
+      STAR_BASE_SPEED: 0.5,
+      BASS_FREQ_RANGE: [0, 40],
+      WARNING_DISPLAY_TIME: 5000
+    };
 
-    // Variáveis de estado
-    let currentFrame = 0;
-    let audioContext, analyser, dataArray;
-    let stars = [];
-    let bassIntensity = 0;
-    let starBaseSpeed = 0.5;
-    let mediaStream = null;
-    let loadedFrames = [];
-    let bgHue = 0;
-    let isUsingMic = false;
+    // ================ DOM ELEMENTS ================
+    const elements = {
+      canvas: document.getElementById('canvas'),
+      ctx: canvas.getContext('2d'),
+      startBtn: document.getElementById('startBtn'),
+      mobileMicBtn: document.getElementById('mobileMicBtn'),
+      menuToggle: document.getElementById('menuToggle'),
+      sideMenu: document.getElementById('sideMenu'),
+      closeMenu: document.getElementById('closeMenu'),
+      reconnectBtn: document.getElementById('reconnectBtn'),
+      donatePopup: document.getElementById('donatePopup'),
+      popupContent: document.getElementById('popupContent'),
+      closePopupBtn: document.getElementById('closePopupBtn'),
+      shareWarning: document.getElementById('shareWarning'),
+      mobileIndicator: document.getElementById('mobileIndicator'),
+      customCursor: document.getElementById('customCursor'),
+      checkboxes: {
+        showWaveform: document.getElementById('showWaveform'),
+        rgbStars: document.getElementById('rgbStars'),
+        colorPulse: document.getElementById('colorPulse'),
+        rgbPulse: document.getElementById('rgbPulse'),
+        beatBlink: document.getElementById('beatBlink')
+      }
+    };
 
-    // Configuração inicial para mobile/desktop
-    if (isMobile) {
-      document.getElementById('startBtn').style.display = 'none';
-      document.getElementById('reconnectCapture').style.display = 'none';
-      document.getElementById('mobileMicBtn').style.display = 'block';
-    }
+    // ================ STATE MANAGEMENT ================
+    const state = {
+      currentFrame: 0,
+      audioContext: null,
+      analyser: null,
+      dataArray: null,
+      stars: [],
+      bassIntensity: 0,
+      mediaStream: null,
+      loadedFrames: [],
+      bgHue: 0,
+      isUsingMic: false,
+      animationInterval: null,
+      animationFrameId: null,
+      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    };
 
-    // Cursor personalizado (só para desktop)
-    const cursor = document.getElementById('customCursor');
-    if (!isMobile) {
-      let timer;
+    // ================ UTILITY FUNCTIONS ================
+    /**
+     * Generates frame paths for animation
+     * @returns {Array} Array of frame paths
+     */
+    const generateFramePaths = () => {
+      return Array.from({length: CONFIG.TOTAL_FRAMES}, (_, i) => 
+        `${CONFIG.FRAME_PATH}${CONFIG.FRAME_PREFIX}${String(i+1).padStart(3, '0')}.jpg`);
+    };
+
+    /**
+     * Creates a star object with random properties
+     * @param {number} width - Canvas width
+     * @param {number} height - Canvas height
+     * @returns {Object} Star object
+     */
+    const createStar = (width, height) => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 3,
+      speed: Math.random() * 0.5 + CONFIG.STAR_BASE_SPEED,
+      hue: Math.random() * 360
+    });
+
+    // ================ CORE FUNCTIONS ================
+    /**
+     * Initializes the application
+     */
+    const initApp = () => {
+      setupEventListeners();
+      setupMobileUI();
+      setupCursor();
+    };
+
+    /**
+     * Sets up all event listeners
+     */
+    const setupEventListeners = () => {
+      elements.startBtn.addEventListener('click', startCapture);
+      elements.mobileMicBtn.addEventListener('click', toggleMic);
+      elements.menuToggle.addEventListener('click', toggleMenu);
+      elements.closeMenu.addEventListener('click', toggleMenu);
+      elements.reconnectBtn.addEventListener('click', reconnectCapture);
+      elements.closePopupBtn.addEventListener('click', closePopup);
+      window.addEventListener('resize', handleResize);
+      
+      if (!state.isMobile) {
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
+
+    /**
+     * Sets up mobile-specific UI
+     */
+    const setupMobileUI = () => {
+      if (state.isMobile) {
+        elements.startBtn.style.display = 'none';
+        elements.reconnectBtn.style.display = 'none';
+        elements.mobileMicBtn.style.display = 'block';
+      }
+    };
+
+    /**
+     * Sets up custom cursor for desktop
+     */
+    const setupCursor = () => {
+      if (state.isMobile) {
+        elements.customCursor.style.display = 'none';
+        return;
+      }
+
+      let cursorTimer;
       const delay = 1000;
 
       document.addEventListener('mousemove', (e) => {
-        cursor.style.display = 'block';
-        cursor.style.left = `${e.clientX}px`;
-        cursor.style.top = `${e.clientY}px`;
+        elements.customCursor.style.display = 'block';
+        elements.customCursor.style.left = `${e.clientX}px`;
+        elements.customCursor.style.top = `${e.clientY}px`;
         
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            cursor.style.transition = 'transform 0.1s ease-out';
-            cursor.style.display = 'none';
+        clearTimeout(cursorTimer);
+        cursorTimer = setTimeout(() => {
+          elements.customCursor.style.transition = 'transform 0.1s ease-out';
+          elements.customCursor.style.display = 'none';
         }, delay);
       });
 
       document.addEventListener('mouseout', () => {
-          cursor.style.display = 'none';
+        elements.customCursor.style.display = 'none';
       });
-    } else {
-      cursor.style.display = 'none';
-    }
+    };
 
-    // Controle do menu
-    function toggleMenu() {
-      const menu = document.getElementById('sideMenu');
-      menu.classList.toggle('active');
-      document.querySelector('.menu-toggle').style.display = menu.classList.contains('active') ? 'none' : 'block';
-    }
-
-    function updateUI() {
-      const menuToggle = document.querySelector('.menu-toggle');
-      menuToggle.style.display = (mediaStream || isUsingMic) ? 'block' : 'none';
-    }
-
-    // Pré-carregamento de imagens
-    async function preloadFrames() {
-      return Promise.all(FRAMES.map(src => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.src = src;
-          img.onload = () => {
-            loadedFrames.push(img);
-            resolve();
-          };
-        });
-      }));
-    }
-
-    // Sistema de animação
-    function initAnimation() {
-      const updateCanvasSize = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        stars = Array.from({length: 100}, () => ({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: Math.random() * 3,
-          speed: Math.random() * 0.5 + starBaseSpeed,
-          hue: Math.random() * 360
-        }));
-      };
-
+    // ================ ANIMATION FUNCTIONS ================
+    /**
+     * Initializes animation system
+     */
+    const initAnimation = () => {
       updateCanvasSize();
       window.addEventListener('resize', updateCanvasSize);
 
-      setInterval(() => {
-        // Efeito de fundo RGB
-        if(document.getElementById('rgbPulse').checked) {
-          bgHue = (bgHue + 1) % 360;
-          const pulseValue = Math.min(bassIntensity * 50, 30);
-          document.body.style.background = `hsla(${bgHue}, 80%, ${10 + pulseValue}%, 0.8)`;
-        } else {
-          document.body.style.background = 'rgba(0, 0, 0, 0.8)';
-        }
+      if (state.animationInterval) {
+        clearInterval(state.animationInterval);
+      }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawStars();
-        drawNinja();
-        if(document.getElementById('showWaveform').checked) drawWaveform();
-      }, 1000/FPS);
-    }
+      state.animationInterval = setInterval(renderFrame, 1000/CONFIG.FPS);
+    };
 
-    // Desenho do Ninja
-    function drawNinja() {
-      const img = loadedFrames[currentFrame % totalFrames];
-      if(!img) return;
+    /**
+     * Updates canvas size and regenerates stars
+     */
+    const updateCanvasSize = () => {
+      elements.canvas.width = window.innerWidth;
+      elements.canvas.height = window.innerHeight;
+      
+      state.stars = Array.from({length: CONFIG.STAR_COUNT}, () => 
+        createStar(elements.canvas.width, elements.canvas.height));
+    };
 
-      const maxWidth = canvas.width * 0.9;
-      const maxHeight = canvas.height * 0.9;
+    /**
+     * Renders a single animation frame
+     */
+    const renderFrame = () => {
+      updateBackground();
+      elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+      drawStars();
+      drawNinja();
+      if (elements.checkboxes.showWaveform.checked) drawWaveform();
+    };
+
+    /**
+     * Updates background based on settings
+     */
+    const updateBackground = () => {
+      if (elements.checkboxes.rgbPulse.checked) {
+        state.bgHue = (state.bgHue + 1) % 360;
+        const pulseValue = Math.min(state.bassIntensity * 50, 30);
+        document.body.style.background = `hsla(${state.bgHue}, 80%, ${10 + pulseValue}%, 0.8)`;
+      } else {
+        document.body.style.background = 'rgba(0, 0, 0, 0.8)';
+      }
+    };
+
+    /**
+     * Draws the ninja character
+     */
+    const drawNinja = () => {
+      const img = state.loadedFrames[state.currentFrame % CONFIG.TOTAL_FRAMES];
+      if (!img) return;
+
+      const maxWidth = elements.canvas.width * 0.9;
+      const maxHeight = elements.canvas.height * 0.9;
       const scaleFactor = Math.min(
         maxWidth / img.width,
         maxHeight / img.height
-      ) * (0.8 + bassIntensity * 0.3);
+      ) * (0.8 + state.bassIntensity * 0.3);
 
-      const rotation = bassIntensity * (Math.PI/24) * Math.sin(Date.now()/200);
+      const rotation = state.bassIntensity * (Math.PI/24) * Math.sin(Date.now()/200);
       const width = img.width * scaleFactor;
       const height = img.height * scaleFactor;
       
-      ctx.save();
-      ctx.translate(canvas.width/2, canvas.height/2);
-      ctx.rotate(rotation);
+      elements.ctx.save();
+      elements.ctx.translate(elements.canvas.width/2, elements.canvas.height/2);
+      elements.ctx.rotate(rotation);
       
-      // Efeito de piscar
-      if(document.getElementById('beatBlink').checked) {
-        ctx.globalAlpha = 0.5 + (bassIntensity * 0.5);
+      if (elements.checkboxes.beatBlink.checked) {
+        elements.ctx.globalAlpha = 0.5 + (state.bassIntensity * 0.5);
       }
       
-      ctx.drawImage(img, -width/2, -height/2, width, height);
-      ctx.restore();
+      elements.ctx.drawImage(img, -width/2, -height/2, width, height);
+      elements.ctx.restore();
 
-      currentFrame = (currentFrame + 1) % totalFrames;
-    }
+      state.currentFrame = (state.currentFrame + 1) % CONFIG.TOTAL_FRAMES;
+    };
 
-    // Sistema de estrelas
-    function drawStars() {
-      const intensityMultiplier = 0.5 + (bassIntensity * 3);
+    /**
+     * Draws stars
+     */
+    const drawStars = () => {
+      const intensityMultiplier = 0.5 + (state.bassIntensity * 3);
 
-      stars.forEach(star => {
+      state.stars.forEach(star => {
         star.x -= star.speed * intensityMultiplier * (1 + Math.sin(Date.now()/500)*0.3);
         
-        if(star.x < -star.size * 2) {
-          star.x = canvas.width + star.size;
-          star.y = Math.random() * canvas.height;
+        if (star.x < -star.size * 2) {
+          star.x = elements.canvas.width + star.size;
+          star.y = Math.random() * elements.canvas.height;
           star.size = Math.random() * 3;
         }
 
-        const useRGB = document.getElementById('rgbStars').checked;
-        const pulseEffect = document.getElementById('colorPulse').checked;
+        const useRGB = elements.checkboxes.rgbStars.checked;
+        const pulseEffect = elements.checkboxes.colorPulse.checked;
         
         let hue = star.hue;
-        if(useRGB) {
+        if (useRGB) {
           hue = (star.hue += 0.7) % 360;
-          if(pulseEffect) {
-            hue = (hue + bassIntensity * 50) % 360;
+          if (pulseEffect) {
+            hue = (hue + state.bassIntensity * 50) % 360;
           }
         }
         
-        ctx.fillStyle = useRGB ? 
-          `hsl(${hue}, 100%, ${70 + (bassIntensity * 20)}%)` : 
-          `rgba(255, 255, 255, ${0.8 + bassIntensity * 0.5})`;
+        elements.ctx.fillStyle = useRGB ? 
+          `hsl(${hue}, 100%, ${70 + (state.bassIntensity * 20)}%)` : 
+          `rgba(255, 255, 255, ${0.8 + state.bassIntensity * 0.5})`;
         
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size * (1 + bassIntensity * 0.5), 0, Math.PI*2);
-        ctx.fill();
+        elements.ctx.beginPath();
+        elements.ctx.arc(star.x, star.y, star.size * (1 + state.bassIntensity * 0.5), 0, Math.PI*2);
+        elements.ctx.fill();
       });
-    }
+    };
 
-    // Visualizador de áudio
-    function drawWaveform() {
-      if(!dataArray) return;
+    /**
+     * Draws audio waveform
+     */
+    const drawWaveform = () => {
+      if (!state.dataArray) return;
       
-      ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + bassIntensity*0.7})`;
-      for(let i = 0; i < dataArray.length; i += 4) {
-        const height = dataArray[i] / 255 * canvas.height/4;
-        ctx.fillRect(i * 4, canvas.height - height, 3, height);
+      elements.ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + state.bassIntensity*0.7})`;
+      for (let i = 0; i < state.dataArray.length; i += 4) {
+        const height = state.dataArray[i] / 255 * elements.canvas.height/4;
+        elements.ctx.fillRect(i * 4, elements.canvas.height - height, 3, height);
       }
-    }
+    };
 
-    // Função para iniciar com microfone (mobile)
-    async function startWithMic() {
+    // ================ AUDIO FUNCTIONS ================
+    /**
+     * Starts audio capture from screen share
+     */
+    const startCapture = async () => {
       try {
-        // document.getElementById('mobileMicBtn').innerHTML = '<i class="fas fa-microphone-slash"></i> PARAR MICROFONE';
-        document.getElementById('mobileIndicator').style.display = 'block';
-        document.getElementById('shareWarning').style.display = 'block';
-        document.getElementById('shareWarning').innerHTML = '<i class="fas fa-info-circle"></i> O ninja está dançando de acordo com o som captado pelo seu microfone!';
+        showWarning('O aviso do navegador abaixo da barra de URL é normal. Foque na experiência!');
         
-        isUsingMic = true;
+        await document.documentElement.requestFullscreen();
+        
+        state.mediaStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { displaySurface: 'browser' },
+          audio: true
+        });
+
+        hideWarningAfterDelay();
+        elements.startBtn.style.display = 'none';
+        elements.sideMenu.classList.add('active');
         updateUI();
         
-        // Configurar análise de áudio do microfone
+        setupAudioAnalysis(state.mediaStream);
+        await preloadFrames();
+        initAnimation();
+      } catch (err) {
+        console.error("Erro ao iniciar:", err);
+        document.exitFullscreen();
+      }
+    };
+
+    /**
+     * Toggles microphone on/off for mobile
+     */
+    const toggleMic = async () => {
+      if (state.isUsingMic) {
+        stopMic();
+      } else {
+        await startWithMic();
+      }
+    };
+
+    /**
+     * Starts audio capture from microphone
+     */
+    const startWithMic = async () => {
+      try {
+        elements.mobileIndicator.style.display = 'block';
+        showWarning('O ninja está dançando de acordo com o som captado pelo seu microfone!');
+        
+        state.isUsingMic = true;
+        updateUI();
+        
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         setupAudioAnalysis(stream);
         
-        // Pré-carregar frames e iniciar animação
         await preloadFrames();
         initAnimation();
         
-        // Esconder aviso após 5 segundos
-        setTimeout(() => {
-          document.getElementById('shareWarning').style.display = 'none';
-          document.getElementById('mobileMicBtn').style.display = 'none';
-        }, 5000);
-        
-      } catch(err) {
+        hideWarningAfterDelay();
+        elements.mobileMicBtn.style.display = 'none';
+      } catch (err) {
         console.error("Erro ao acessar microfone:", err);
         alert("Não foi possível acessar o microfone. Por favor, permita o acesso ao microfone.");
         stopMic();
       }
-    }
+    };
 
-    function stopMic() {
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        mediaStream = null;
+    /**
+     * Stops microphone capture
+     */
+    const stopMic = () => {
+      if (state.mediaStream) {
+        state.mediaStream.getTracks().forEach(track => track.stop());
+        state.mediaStream = null;
       }
       
-      isUsingMic = false;
-      document.getElementById('mobileMicBtn').innerHTML = '<i class="fas fa-microphone"></i> USAR MICROFONE';
-      document.getElementById('mobileIndicator').style.display = 'none';
+      state.isUsingMic = false;
+      elements.mobileMicBtn.innerHTML = '<i class="fas fa-microphone"></i> USAR MICROFONE';
+      elements.mobileIndicator.style.display = 'none';
       updateUI();
-    }
+    };
 
-    // Função para iniciar compartilhamento de tela (desktop)
-    async function startCapture() {
-      try {
-        document.getElementById('shareWarning').style.display = 'block';
-        
-        await document.documentElement.requestFullscreen();
-        
-        mediaStream = await navigator.mediaDevices.getDisplayMedia({
-          video: {
-            displaySurface: 'browser'
-          },
-          audio: true
-        });
-
-        setTimeout(() => {
-          document.getElementById('shareWarning').style.display = 'none';
-        }, 5000);
-
-        document.getElementById('startBtn').style.display = 'none';
-        document.getElementById('sideMenu').classList.add('active');
-        updateUI();
-        
-        setupAudioAnalysis(mediaStream);
-        await preloadFrames();
-        initAnimation();
-      } catch(err) {
-        console.error("Erro ao iniciar:", err);
-        document.exitFullscreen();
-      }
-    }
-
-    // Event listeners para os botões
-    document.getElementById('startBtn').addEventListener('click', startCapture);
-    document.getElementById('mobileMicBtn').addEventListener('click', function() {
-      if (isUsingMic) {
-        stopMic();
-      } else {
-        startWithMic();
-      }
-    });
-
-    async function reconnectCapture() {
-      if (isUsingMic) {
+    /**
+     * Reconnects audio capture
+     */
+    const reconnectCapture = async () => {
+      if (state.isUsingMic) {
         stopMic();
         await startWithMic();
-      } else if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
+      } else if (state.mediaStream) {
+        state.mediaStream.getTracks().forEach(track => track.stop());
         await startCapture();
       }
-    }
+    };
 
-    // Configuração de áudio
-    function setupAudioAnalysis(stream) {
-      if (audioContext) {
-        audioContext.close();
+    /**
+     * Sets up audio analysis
+     * @param {MediaStream} stream - Audio stream to analyze
+     */
+    const setupAudioAnalysis = (stream) => {
+      if (state.audioContext) {
+        state.audioContext.close();
       }
       
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioContext.createAnalyser();
-      analyser.fftSize = 2048;
+      state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      state.analyser = state.audioContext.createAnalyser();
+      state.analyser.fftSize = 2048;
       
-      const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const source = state.audioContext.createMediaStreamSource(stream);
+      source.connect(state.analyser);
+      state.dataArray = new Uint8Array(state.analyser.frequencyBinCount);
 
       analyzeAudio();
-    }
+    };
 
-    function analyzeAudio() {
-      analyser.getByteFrequencyData(dataArray);
+    /**
+     * Analyzes audio data and updates bass intensity
+     */
+    const analyzeAudio = () => {
+      state.analyser.getByteFrequencyData(state.dataArray);
       
-      // Ajuste para microfone (valores mais baixos)
-      const bass = dataArray.slice(0, 20).reduce((a, b) => a + b) / 20;
-      const lowMid = dataArray.slice(20, 40).reduce((a, b) => a + b) / 20;
-      bassIntensity = Math.min((bass * (isUsingMic ? 3 : 1.5) + lowMid * 0.5) / 255, 1.5);
+      const [bassStart, bassEnd] = CONFIG.BASS_FREQ_RANGE;
+      const bassRange = state.dataArray.slice(bassStart, bassEnd);
+      const bass = bassRange.reduce((a, b) => a + b) / bassRange.length;
+      
+      // Adjust sensitivity for mic vs screen share
+      const sensitivity = state.isUsingMic ? 3 : 1.5;
+      state.bassIntensity = Math.min((bass * sensitivity) / 255, 1.5);
 
-      if (!isMobile && cursor.style.display === 'block') {
-        const pulseScale = 1 + (bassIntensity * 0.3);
-        cursor.style.transform = `translate(0.9vw, 0.9vw) scale(${pulseScale})`;
+      if (!state.isMobile && elements.customCursor.style.display === 'block') {
+        const pulseScale = 1 + (state.bassIntensity * 0.3);
+        elements.customCursor.style.transform = `translate(0.9vw, 0.9vw) scale(${pulseScale})`;
       }
       
-      requestAnimationFrame(analyzeAudio);
-    }
+      state.animationFrameId = requestAnimationFrame(analyzeAudio);
+    };
 
-    // Popup de doação
-    async function showDonationPopup() {
+    // ================ UI FUNCTIONS ================
+    /**
+     * Toggles side menu
+     */
+    const toggleMenu = () => {
+      elements.sideMenu.classList.toggle('active');
+      elements.menuToggle.style.display = elements.sideMenu.classList.contains('active') ? 'none' : 'block';
+    };
+
+    /**
+     * Updates UI state
+     */
+    const updateUI = () => {
+      elements.menuToggle.style.display = (state.mediaStream || state.isUsingMic) ? 'block' : 'none';
+    };
+
+    /**
+     * Shows warning message
+     * @param {string} message - Warning message to display
+     */
+    const showWarning = (message) => {
+      elements.shareWarning.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+      elements.shareWarning.style.display = 'block';
+    };
+
+    /**
+     * Hides warning after delay
+     */
+    const hideWarningAfterDelay = () => {
+      setTimeout(() => {
+        elements.shareWarning.style.display = 'none';
+      }, CONFIG.WARNING_DISPLAY_TIME);
+    };
+
+    /**
+     * Shows donation popup
+     */
+    const showDonationPopup = async () => {
       try {
         const response = await fetch('https://ip-api.com/json/?fields=countryCode');
         const data = await response.json();
         
         const isBrazil = data.countryCode === 'BR';
-        document.getElementById('popupContent').innerHTML = isBrazil ? 
+        elements.popupContent.innerHTML = isBrazil ? 
           `<img src="pixQR.png" width="150">
            <p>Chave Pix: 43621554000119</p>` :
           `<p>Help keep me dancing!<br>International donations:</p>`;
       } catch {
-        document.getElementById('popupContent').innerHTML = 
-          `<p>Ajude o ninja a continuar dançando!</p>`;
+        elements.popupContent.innerHTML = `<p>Ajude o ninja a continuar dançando!</p>`;
       }
-      document.getElementById('donatePopup').style.display = 'block';
-    }
+      elements.donatePopup.style.display = 'block';
+    };
 
-    // Funções auxiliares
-    function closePopup() {
-      document.getElementById('donatePopup').style.display = 'none';
-    }
+    /**
+     * Closes popup
+     */
+    const closePopup = () => {
+      elements.donatePopup.style.display = 'none';
+    };
 
-    function initDonationTimer() {
-      setTimeout(showDonationPopup, 2000);
-    }
+    // ================ EVENT HANDLERS ================
+    /**
+     * Handles window resize
+     */
+    const handleResize = () => {
+      elements.canvas.width = window.innerWidth;
+      elements.canvas.height = window.innerHeight;
+    };
 
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
+    /**
+     * Handles visibility change
+     */
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        elements.startBtn?.focus();
+      }
+    };
 
-    // Movendo o foco quando o aviso aparecer (desktop)
-    if (!isMobile) {
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          document.getElementById('startBtn')?.focus();
-        }
-      });
-    }
+    // ================ INITIALIZATION ================
+    /**
+     * Preloads animation frames
+     */
+    const preloadFrames = async () => {
+      const framePaths = generateFramePaths();
+      state.loadedFrames = await Promise.all(framePaths.map(src => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = () => resolve(img);
+        });
+      }));
+    };
+
+    // Initialize the app
+    initApp();
   </script>
 </body>
 </html>
