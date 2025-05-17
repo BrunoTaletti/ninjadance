@@ -1,0 +1,46 @@
+/* Estilos dos botões */
+button {
+  padding: 10px 15px;
+  font-family: var(--fonte-pixel);
+  font-size: 10px;
+  background: transparent;
+  border: 2px solid white;
+  border-radius: 5px;
+  color: white;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+#startBtn {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  font-size: 14px;
+  padding: 15px 25px;
+  background: linear-gradient(45deg, var(--cor-primaria), var(--cor-secundaria));
+  border: none;
+  box-shadow: 0 0 20px rgba(0, 26, 255, 0.5);
+}
+
+#mobileMicBtn {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  font-size: 14px;
+  padding: 15px 25px;
+  background: linear-gradient(45deg, #ff0000, #990000);
+  border: none;
+  display: none;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
