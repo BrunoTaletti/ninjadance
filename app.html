@@ -316,7 +316,7 @@
       <img src="./logo-lateral-negativo.png" class="logo" alt="logo-lateral-negativo">
     </div>
     <div class="effects-section">
-      <button onclick="reconnectCapture()" style="width: 100%; margin-bottom: 10px;">
+      <button onclick="reconnectCapture()" style="width: 100%; margin-bottom: 10px;" id="reconnectCapture">
         <i class="fas fa-sync-alt"></i> RECOMPARTILHAR
       </button>
       <label><input type="checkbox" id="showWaveform"> <i class="fas fa-wave-square"></i> Visualizador de Áudio</label>
@@ -368,6 +368,7 @@
     // Configuração inicial para mobile/desktop
     if (isMobile) {
       document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('reconnectCapture').style.display = 'none';
       document.getElementById('mobileMicBtn').style.display = 'block';
     }
 
@@ -536,7 +537,7 @@
     // Função para iniciar com microfone (mobile)
     async function startWithMic() {
       try {
-        document.getElementById('mobileMicBtn').innerHTML = '<i class="fas fa-microphone-slash"></i> PARAR MICROFONE';
+        // document.getElementById('mobileMicBtn').innerHTML = '<i class="fas fa-microphone-slash"></i> PARAR MICROFONE';
         document.getElementById('mobileIndicator').style.display = 'block';
         document.getElementById('shareWarning').style.display = 'block';
         document.getElementById('shareWarning').innerHTML = '<i class="fas fa-info-circle"></i> O ninja está dançando de acordo com o som captado pelo seu microfone!';
@@ -555,6 +556,7 @@
         // Esconder aviso após 5 segundos
         setTimeout(() => {
           document.getElementById('shareWarning').style.display = 'none';
+          document.getElementById('mobileMicBtn').style.display = 'none';
         }, 5000);
         
       } catch(err) {
