@@ -134,10 +134,27 @@
       transform: translateX(-110%);
       transition: transform 0.3s ease;
       z-index: 300;
+      max-height: 90vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     #sideMenu.active {
       transform: translateX(0);
+    }
+    
+    #sideMenu::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    #sideMenu::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    #sideMenu::-webkit-scrollbar-thumb {
+      background: var(--cor-primaria);
+      border-radius: 10px;
     }
 
     #musicData {
@@ -328,6 +345,13 @@
       
       .menu-toggle {
         padding: 10px 15px;
+      }
+    }
+
+    @media (max-height: 600px) {
+      #sideMenu {
+        max-height: 80vh;
+        top: 10px;
       }
     }
   </style>
@@ -793,11 +817,19 @@
 
     // ================ UI FUNCTIONS ================
     /**
+     * Controla o scroll da página quando o menu está aberto
+     */
+    const toggleBodyScroll = (enable) => {
+      document.body.style.overflow = enable ? 'hidden' : '';
+    };
+
+    /**
      * Toggles side menu
      */
     const toggleMenu = () => {
-      elements.sideMenu.classList.toggle('active');
-      elements.menuToggle.style.display = elements.sideMenu.classList.contains('active') ? 'none' : 'block';
+      const isActive = elements.sideMenu.classList.toggle('active');
+      elements.menuToggle.style.display = isActive ? 'none' : 'block';
+      toggleBodyScroll(isActive);
     };
 
     /**
@@ -858,6 +890,10 @@
     const handleResize = () => {
       elements.canvas.width = window.innerWidth;
       elements.canvas.height = window.innerHeight;
+      
+      if (window.innerHeight < 500 && elements.sideMenu.classList.contains('active')) {
+        toggleMenu();
+      }
     };
 
     /**
