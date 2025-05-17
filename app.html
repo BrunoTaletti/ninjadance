@@ -34,14 +34,15 @@
 
     .custom-cursor {
       position: fixed;
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       pointer-events: none;
       z-index: 9999;
       background-image: url('./cursor.png');
       background-size: cover;
       display: none;
-      transform: translate(0.9vw, 0.9vw);
+      transform: translate(0.1vw, 0.1vw);
+      transition: transform 0.1s ease-out;
     }
 
     canvas {
@@ -291,15 +292,16 @@
 
     // Mostrar cursor personalizado quando o mouse se move
     document.addEventListener('mousemove', (e) => {
-        cursor.style.display = 'block';
-        cursor.style.left = `${e.clientX - 16}px`;
-        cursor.style.top = `${e.clientY - 16}px`;
-        
-        // Resetar o timer de ocultação
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            cursor.style.display = 'none';
-        }, delay);
+      cursor.style.display = 'block';
+      cursor.style.left = `${e.clientX}px`;
+      cursor.style.top = `${e.clientY}px`;
+      
+      // Resetar o timer de ocultação
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+          cursor.style.transition = 'transform 0.1s ease-out';
+          cursor.style.display = 'none';
+      }, delay);
     });
 
     // Ocultar cursor quando sair da janela
@@ -402,7 +404,7 @@
     // Sistema de estrelas
     function drawStars() {
       const intensityMultiplier = 0.5 + (bassIntensity * 3);
-      
+
       stars.forEach(star => {
         star.x -= star.speed * intensityMultiplier * (1 + Math.sin(Date.now()/500)*0.3);
         
@@ -491,6 +493,11 @@
       const bass = dataArray.slice(0, 20).reduce((a, b) => a + b) / 20;
       const lowMid = dataArray.slice(20, 40).reduce((a, b) => a + b) / 20;
       bassIntensity = Math.min((bass * 1.5 + lowMid * 0.5) / 255, 1.5);
+
+      if (cursor.style.display === 'block') {
+        const pulseScale = 1 + (bassIntensity * 0.3); // Ajuste o 0.3 para controlar a intensidade
+        cursor.style.transform = `translate(0.9vw, 0.9vw) scale(${pulseScale})`;
+      }
       
       requestAnimationFrame(analyzeAudio);
     }
